@@ -1,0 +1,29 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sk\n"
+
+msgctxt "#30100"
+msgid "rebit.tv"
+msgstr "rebit.tv"
+
+msgctxt "#30101"
+msgid "Prihlasovacie konto"
+msgstr "Prihlasovacie konto"
+
+msgctxt "#30102"
+msgid "Používateľské meno"
+msgstr "Používateľské meno"
+
+msgctxt "#30103"
+msgid "Heslo"
+msgstr "Heslo"
+
+msgctxt "#30501"
+msgid "Používateľ nieje definovaný!"
+msgstr "Používateľ nieje definovaný!"
+
+msgctxt "#30502"
+msgid "Neplatný používateľ!"
+msgstr "Neplatný používateľ!"
+
