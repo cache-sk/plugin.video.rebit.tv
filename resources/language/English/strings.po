@@ -19,6 +19,10 @@ msgctxt "#30103"
 msgid "Heslo"
 msgstr "Heslo"
 
+msgctxt "#30201"
+msgid "Uložiť M3U playlist"
+msgstr "Uložiť M3U playlist"
+
 msgctxt "#30501"
 msgid "Používateľ nieje definovaný!"
 msgstr "Používateľ nieje definovaný!"
@@ -26,4 +30,3 @@ msgstr "Používateľ nieje definovaný!"
 msgctxt "#30502"
 msgid "Neplatný používateľ!"
 msgstr "Neplatný používateľ!"
-

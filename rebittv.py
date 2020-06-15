@@ -36,14 +36,16 @@ class RebitTvChannel:
     channel = None
     icon = ''
     title = ''
-    stream = ''
+    adaptive = ''
+    best = ''
 
-    def __init__(self, id, channel, icon, title, stream):
+    def __init__(self, id, channel, icon, title, adaptive, best):
         self.id = id
         self.channel = channel
         self.icon = icon
         self.title = title
-        self.stream = stream
+        self.adaptive = adaptive
+        self.best = best
     
 
 class RebitTvAuthData:
@@ -109,11 +111,10 @@ class RebitTv:
 
         self._data.clear()
 
-        session = requests.Session()
         headers = {'Content-Type':'application/json;charset=utf-8'}
         headers.update(HEADERS)
         payload = {'password':self._password,'username':self._username}
-        resp = session.post(API + 'auth/auth', json=payload, headers=headers)
+        resp = self._session.post(API + 'auth/auth', json=payload, headers=headers)
         
         if resp.status_code != 200:
             raise UserInvalidException
@@ -127,7 +128,7 @@ class RebitTv:
         del headers['Content-Type']
         headers.update({'Authorization':'Bearer ' + self._data.access_token})
         
-        resp = session.post(API + 'television/client', json=CLIENT, headers=headers)
+        resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
         data = resp.json()['data']
         self._data.client_id = data['id']
 
@@ -146,24 +147,49 @@ class RebitTv:
         headers = {'Authorization':'Bearer ' + self._data.access_token, 'X-Client-ID':self._data.client_id}
         headers.update(HEADERS)
         return headers
-
+    
+    def getRequestsSession(self):
+        self._login()
+        return self._session
+        
     def getChannels(self):
         self._login()
         resp = self._session.get(API + 'television/channels', headers=self.getHeaders())
         data = resp.json()['data']
         channels = []
         for item in data:
+            adaptive = None
+            best = None
+            fhd = None
+            hd = None
+            sd = None
+            other = None
             for s in item['streams']:
                 if s['quality'] == 'dynamic':
-                    stream = s['link']
-                    break
-            if stream:
+                    adaptive = s['link']
+                elif s['quality'] == '1080p':
+                    fhd = s['link']
+                elif s['quality'] == '720p':
+                    hd = s['link']
+                elif s['quality'] == '432p':
+                    sd = s['link']
+                else:
+                    other = s['link']
+            if fhd is not None:
+                best = fhd
+            elif hd is not None:
+                best = hd
+            elif sd is not None:
+                best = sd
+            elif other is not None:
+                best = other
+            if adaptive or best:
                 channel = RebitTvChannel(
                     item['id'],
                     int(item['channel']),
                     item['icon'],
                     item['title'],
-                    stream)
+                    adaptive, best)
                 channels.append(channel)
 
         channels = sorted(channels, key = lambda i: i.channel)
