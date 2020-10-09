@@ -19,9 +19,25 @@ msgctxt "#30103"
 msgid "Heslo"
 msgstr "Heslo"
 
+msgctxt "#30104"
+msgid "Generovať playlist a EPG"
+msgstr "Generovať playlist a EPG"
+
+msgctxt "#30105"
+msgid "Nastavenie PVR IPTV Simple Client"
+msgstr "Nastavenie PVR IPTV Simple Client"
+
 msgctxt "#30201"
-msgid "Uložiť M3U playlist"
-msgstr "Uložiť M3U playlist"
+msgid "Playlist a epg vygenerované"
+msgstr "Playlist a epg vygenerované"
+
+msgctxt "#30202"
+msgid "Nemáte nainštalovaný PVR IPTV Simple Client"
+msgstr "Nemáte nainštalovaný PVR IPTV Simple Client"
+
+msgctxt "#30203"
+msgid "Teraz zobrazí niekoľko krát po sebe dialóg s nutným reštartom. Potom reštartujte Kodi.\nNásledne odporúčam aj vymazať údaje v Nastavenia / PVR a televízia - Všeobecné.\nTento proces je nezvratný, pokračovať?"
+msgstr "Teraz zobrazí niekoľko krát po sebe dialóg s nutným reštartom. Potom reštartujte Kodi.\nNásledne odporúčam aj vymazať údaje v Nastavenia / PVR a televízia - Všeobecné.\nTento proces je nezvratný, pokračovať?"
 
 msgctxt "#30501"
 msgid "Používateľ nieje definovaný!"

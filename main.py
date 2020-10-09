@@ -33,7 +33,6 @@ def root():
         is_folder = False
         list_item.setProperty('IsPlayable', 'true')
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
-    xbmcplugin.addDirectoryItem(_handle, get_url(action='m3u'), xbmcgui.ListItem(label=_addon.getLocalizedString(30201)), True)
     xbmcplugin.endOfDirectory(_handle)
 
 def play(cid):
@@ -63,30 +62,10 @@ def play(cid):
     else:
         xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
 
-def m3u():
-    try:
-        folder = xbmcgui.Dialog().browseSingle(3, _addon.getAddonInfo('name'), "local")
-        if folder and os.path.exists(folder):
-            with io.open(os.path.join(folder,'playlist.m3u'), 'w', encoding='utf8') as f:
-                rtv = rebittv.RebitTv(_username, _password, _profile)
-                channels = rtv.getChannels()
-                f.write(u'#EXTM3U\n')
-                for ch in channels:
-                    f.write(u'#EXTINF:0 tvg-logo="{0}" tvg-name="{1}",{1}\n'.format(ch.icon,ch.title))
-                    f.write(unicode(get_url(action='play', cid=ch.id) + '\n'))
-                f.close()
-            xbmcgui.Dialog().notification(_addon.getAddonInfo('name'), 'Playlist OK', icon=xbmcgui.NOTIFICATION_INFO, time=3000, sound=True)
-    except Exception as e:
-        xbmcgui.Dialog().notification(_addon.getAddonInfo('name'), str(e), icon=xbmcgui.NOTIFICATION_ERROR, time=3000, sound=True)
-        traceback.print_exc()
-    xbmcplugin.endOfDirectory(_handle)
-
 def router(params):
     if params and 'action' in params:
         if params['action'] == 'play':
             play(params['cid'])
-        elif params['action'] == 'm3u':
-            m3u()
         else:
             root()
     else:

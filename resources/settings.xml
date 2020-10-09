@@ -4,5 +4,7 @@
         <setting label="30101" type="lsep"/>
         <setting label="30102" type="text" id="username"/>
         <setting label="30103" type="text" option="hidden" id="password"/>
+        <setting label="30104" type="bool" id="genall" default="false"/>
+        <setting label="30105" type="action" action="RunScript(special://home/addons/plugin.video.rebit.tv/pisc.py)"/>
     </category>
 </settings>
