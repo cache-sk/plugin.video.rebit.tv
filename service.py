@@ -23,19 +23,27 @@ class RebbitMonitor(xbmc.Monitor):
     def __init__(self):
         xbmc.Monitor.__init__(self)
         self._addon = xbmcaddon.Addon()
-        self._profile = xbmc.translatePath(self._addon.getAddonInfo('profile')).decode("utf-8")
+        self._profile = xbmc.translatePath(self._addon.getAddonInfo('profile'))
+        try:
+            self._profile = self._profile.decode("utf-8")
+        except AttributeError:
+            pass
         ts = self._addon.getSetting('gen_next_update')
         self._next_update = datetime.datetime.now() if ts == '' else datetime.datetime.fromtimestamp(float(ts))
         #cleanup
-        files_to_remove = [f for f in os.listdir(self._profile) if os.path.isfile(os.path.join(self._profile, f)) and (f.endswith('.work.xml') or f.endswith('.work.m3u'))]
-        for f in files_to_remove:
-            os.unlink(os.path.join(self._profile, f))
+        if os.path.exists(self._profile):
+            files_to_remove = [f for f in os.listdir(self._profile) if os.path.isfile(os.path.join(self._profile, f)) and (f.endswith('.work.xml') or f.endswith('.work.m3u'))]
+            for f in files_to_remove:
+                os.unlink(os.path.join(self._profile, f))
 
     def __del__(self):
-        print 'rebit.tv service destroyed'
+        print('rebit.tv service destroyed')
 
     def notify(self, text, error=False):
-        text = text.encode("utf-8") if type(text) is unicode else text
+        try:
+            text = text.encode("utf-8") if type(text) is unicode else text
+        except NameError:
+            pass
         icon = 'DefaultIconError.png' if error else ''
         xbmc.executebuiltin('Notification("%s","%s",5000,%s)' % (self._addon.getAddonInfo('name'), text, icon))
 
@@ -51,7 +59,7 @@ class RebbitMonitor(xbmc.Monitor):
 
     def schedule_next(self, seconds):
         dt = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
-        print 'Next rebit.tv update %s' % dt
+        print('Next rebit.tv update %s' % dt)
         self._next_update = dt
 
     def update(self):
@@ -59,7 +67,6 @@ class RebbitMonitor(xbmc.Monitor):
         if not gse:
             return False
 
-        self._profile = xbmc.translatePath(self._addon.getAddonInfo('profile')).decode("utf-8")
         if not os.path.exists(self._profile):
             os.makedirs(self._profile)
         
@@ -94,7 +101,7 @@ class RebbitMonitor(xbmc.Monitor):
 
     def save(self):
         self._addon.setSetting('genall_next_update', str(time.mktime(self._next_update.timetuple())))
-        print 'Saving rebit.tv next update %s' % self._next_update
+        print('Saving rebit.tv next update %s' % self._next_update)
 
 def get_random_string(length):
     letters = string.ascii_lowercase

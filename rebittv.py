@@ -243,7 +243,7 @@ class RebitTv:
         return programmes
 
     def generate(self, playlist, guide):
-        print 'Generating rebit tv'
+        print('Generating rebit tv')
         after = datetime.datetime.now() - datetime.timedelta(days=1)
         before = after + datetime.timedelta(days=8)
         with io.open(playlist, 'w', encoding='utf8') as m3u:

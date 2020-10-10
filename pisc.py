@@ -18,7 +18,11 @@ def set_pisc():
     if not xbmcgui.Dialog().yesno(_self.getAddonInfo('name'), _self.getLocalizedString(30203)):
         return
         
-    _profile = xbmc.translatePath(_self.getAddonInfo('profile')).decode("utf-8")
+    _profile = xbmc.translatePath(_self.getAddonInfo('profile'))
+    try:
+        _profile = _profile.decode("utf-8")
+    except AttributeError:
+        pass
     if not os.path.exists(_profile):
         os.makedirs(_profile)
     
@@ -44,5 +48,6 @@ def set_pisc():
     _pisc.setSetting('logoPathType','1')
     _pisc.setSetting('logoBaseUrl','')
     _pisc.setSetting('logoFromEpg','2')
+    xbmcgui.Dialog().ok(_self.getAddonInfo('name'), "HOTOVO")
 
 set_pisc()

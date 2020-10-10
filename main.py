@@ -5,17 +5,28 @@
 # License: AGPL v.3 https://www.gnu.org/licenses/agpl-3.0.html
 
 import sys, os, io
-from urlparse import parse_qsl
-from urllib import urlencode
 import xbmcaddon, xbmcgui, xbmcplugin
 import traceback
 import re
 import rebittv
 
+try:
+    from urllib import urlencode
+    from urlparse import parse_qsl
+except ImportError:
+    from urllib.parse import urlencode
+    from urllib.parse import parse_qsl, urlparse
+
+
 _url = sys.argv[0]
 _handle = int(sys.argv[1])
 _addon = xbmcaddon.Addon()
-_profile = xbmc.translatePath( _addon.getAddonInfo('profile')).decode('utf-8')
+_profile = xbmc.translatePath( _addon.getAddonInfo('profile'))
+try:
+    _profile = _profile.decode("utf-8")
+except AttributeError:
+    pass
+
 _username = xbmcplugin.getSetting(_handle, 'username')
 _password = xbmcplugin.getSetting(_handle, 'password') 
 
@@ -48,9 +59,14 @@ def play(cid):
         if playable.adaptive is not None:
             session = rtv.getRequestsSession()
             adaptive = session.get(playable.adaptive, headers=headers).content
+            try:
+                adaptive = adaptive.decode('utf-8')
+            except AttributeError:
+                pass
             if re.search('CODECS="(.*),(.*)"',adaptive):
                 li = xbmcgui.ListItem(path=playable.adaptive+'|'+urlencode(headers))
-                li.setProperty('inputstreamaddon','inputstream.adaptive')
+                li.setProperty('inputstreamaddon','inputstream.adaptive') #kodi 18
+                li.setProperty('inputstream','inputstream.adaptive') #kodi 19
                 li.setProperty('inputstream.adaptive.manifest_type','hls')
             elif playable.best is not None:
                 li = xbmcgui.ListItem(path=playable.best+'|'+urlencode(headers))
