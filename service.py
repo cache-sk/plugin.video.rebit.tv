@@ -51,8 +51,7 @@ class RebbitMonitor(xbmc.Monitor):
         self._addon = xbmcaddon.Addon()  # refresh for updated settings!
         if not self.abortRequested():
             try:
-                if self.update():
-                    self.notify(self._addon.getLocalizedString(30201))
+                self.update()
             except Exception as e:
                 traceback.print_exc()
                 self.notify(str(e), True)
@@ -87,6 +86,17 @@ class RebbitMonitor(xbmc.Monitor):
         if os.path.isfile(playlist_path):
             os.unlink(playlist_path)
         os.rename(playlist_workpath, playlist_path)
+        
+        self.notify(self._addon.getLocalizedString(30201))
+        
+        if "true" == self._addon.getSetting('restartpisc'):
+            try:
+                pisc = xbmcaddon.Addon(id='pvr.iptvsimple') #existance
+                xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","id":1,"params":{"addonid": "pvr.iptvsimple","enabled":false}}')
+                time.sleep(1)
+                xbmc.executeJSONRPC('{"jsonrpc":"2.0","method":"Addons.SetAddonEnabled","id":1,"params":{"addonid": "pvr.iptvsimple","enabled":true}}')
+            except:
+                pass
 
         return True
 

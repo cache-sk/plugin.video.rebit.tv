@@ -24,8 +24,12 @@ msgid "Generovať playlist a EPG"
 msgstr "Generovať playlist a EPG"
 
 msgctxt "#30105"
-msgid "Nastavenie PVR IPTV Simple Client"
-msgstr "Nastavenie PVR IPTV Simple Client"
+msgid "Nastaviť PVR IPTV Simple Client na generovaný playlist a EPG"
+msgstr "Nastaviť PVR IPTV Simple Client na generovaný playlist a EPG"
+
+msgctxt "#30106"
+msgid "Reštartovať PVR IPTV Simple Client po vygenerovaní"
+msgstr "Reštartovať PVR IPTV Simple Client po vygenerovaní"
 
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
@@ -36,8 +40,12 @@ msgid "Nemáte nainštalovaný PVR IPTV Simple Client"
 msgstr "Nemáte nainštalovaný PVR IPTV Simple Client"
 
 msgctxt "#30203"
-msgid "Teraz zobrazí niekoľko krát po sebe dialóg s nutným reštartom. Potom reštartujte Kodi.\nNásledne odporúčam aj vymazať údaje v Nastavenia / PVR a televízia - Všeobecné.\nTento proces je nezvratný, pokračovať?"
-msgstr "Teraz zobrazí niekoľko krát po sebe dialóg s nutným reštartom. Potom reštartujte Kodi.\nNásledne odporúčam aj vymazať údaje v Nastavenia / PVR a televízia - Všeobecné.\nTento proces je nezvratný, pokračovať?"
+msgid "Teraz sa spustí automatické nastavenie PVR IPTV Simple Client-a. Ak zobrazí dialógy o reštarte, len ich odsúhlaste. Keď proces skončí, zavrite nastavenia tlačítkom OK, počkajte na hlášku o vygenerovaní a potom reštartujte Kodi.\nTento proces je nezvratný a prepíše aktuálne nastavenia PVR IPTV Simple Client-a, pokračovať?"
+msgstr "Teraz sa spustí automatické nastavenie PVR IPTV Simple Client-a. Ak zobrazí dialógy o reštarte, len ich odsúhlaste. Keď proces skončí, zavrite nastavenia tlačítkom OK, počkajte na hlášku o vygenerovaní a potom reštartujte Kodi.\nTento proces je nezvratný a prepíše aktuálne nastavenia PVR IPTV Simple Client-a, pokračovať?"
+
+msgctxt "#30204"
+msgid "Proces nastavenia dokončený."
+msgstr "Proces nastavenia dokončený."
 
 msgctxt "#30501"
 msgid "Používateľ nieje definovaný!"
