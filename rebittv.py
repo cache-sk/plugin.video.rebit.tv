@@ -10,6 +10,8 @@ import sys
 import requests
 import json
 import time, datetime
+import _strptime
+import xbmc
 
 HEADERS = {
     'Origin':'https://www.rebit.tv',
@@ -159,9 +161,35 @@ class RebitTv:
         del headers['Content-Type']
         headers.update({'Authorization':'Bearer ' + self._data.access_token})
         
-        resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
-        data = resp.json()['data']
-        self._data.client_id = data['id']
+        #need client ID, remove oldest clients until it works
+        clientId = None
+        while clientId is None:
+            resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
+            try:
+                data = resp.json()['data']
+                clientId = data['id']
+            except Exception as e:
+                #too many devices?!
+                resp = self._session.get(API + 'television/clients', headers=headers)
+                oldest = None
+                clients = resp.json()['data']
+                for client in clients:
+                    if oldest is None:
+                        oldest = client
+                    else:
+                        ot = oldest['updated_at'] if 'updated_at' in oldest and oldest['updated_at'] else (oldest['created_at'] if 'created_at' in oldest and oldest['created_at'] else None)
+                        ct = client['updated_at'] if 'updated_at' in client and client['updated_at'] else (client['created_at'] if 'created_at' in client and client['created_at'] else None)
+                        if ct is not None:
+                            ct = time.strptime(ct, DATETIME_FORMAT)
+                            if ot is not None:
+                                ot = time.strptime(ot, DATETIME_FORMAT)
+                                if ct < ot:
+                                    oldest = client
+                        else:
+                            oldest = client
+                resp = self._session.delete(API + '/television/clients/'+oldest['id'], json=CLIENT, headers=headers)
+            
+        self._data.client_id = clientId
 
         self._store_session()
     
