@@ -112,8 +112,9 @@ class RebitTvAuthData:
                 self.client_id != '')
 
     def is_valid(self):
-        return self.is_populated()
-        #TODO refresh token!
+        if self.is_populated():
+            return time.time() < self.expire_in
+        return False
 
     def clear(self):
         self.access_token = ''
@@ -151,13 +152,20 @@ class RebitTv:
 
     def _auth(self):
 
-        if self._data.is_valid():
-            return
+        if self._data.is_populated():
+            if self._data.is_valid():
+                return
+            else:
+                self._refresh_token()
+                if self._data.is_valid():
+                    return
 
         if (self._username == '') or (self._password == ''):
             raise UserNotDefinedException
 
         self._data.clear()
+        
+        now = time.time()
 
         headers = {'Content-Type':'application/json;charset=utf-8'}
         headers.update(HEADERS)
@@ -169,7 +177,7 @@ class RebitTv:
 
         data = resp.json()['data']
         self._data.access_token = data['access_token']
-        self._data.expire_in = data['expire_in']
+        self._data.expire_in = now + int(data['expire_in'])
         self._data.refresh_token = data['refresh_token']
         self._data.user_id = data['user_id']
 
@@ -210,15 +218,28 @@ class RebitTv:
         self._data.client_id = clientId
 
         self._store_session()
-    
-    def _login(self):
-        if not self._data.is_valid():
-            self._reconnect()
-
-    def _reconnect(self):
-        self._data.clear()
-        self._auth()
         
+    def _refresh_token(self):
+        #print 'refreshing token'
+        now = time.time()
+        headers = {
+            'Content-Type':'application/json;charset=utf-8',
+            'Authorization':'Bearer ' + self._data.refresh_token
+        }
+        headers.update(HEADERS)
+        resp = self._session.post(API + 'auth/auth', headers=headers)
+    
+        #if resp.status_code != 200:
+        #    raise UserInvalidException
+        
+        data = resp.json()['data']
+        self._data.access_token = data['access_token']
+        self._data.expire_in = now + int(data['expire_in'])
+        self._data.refresh_token = data['refresh_token']
+        self._data.user_id = data['user_id']
+        
+        self._store_session()
+    
     def _get(self, url, params={}, dheaders={}, slow=False):
         doIt = True
         while doIt:
@@ -234,23 +255,26 @@ class RebitTv:
                 else:
                     time.sleep(random.randint(1,2) + random.random())
             elif ('code' in data and data['code'] == 403) or ('message' in data and data['message'] == 'The access token is invalid.'):
-                self._reconnect()
+                self._auth()
             else:
                 return data
 
     def getHeaders(self):
-        self._login()
+        self._auth()
         headers = {'Authorization':'Bearer ' + self._data.access_token, 'x-television-client-id':self._data.client_id, 'x-child-lock-code':'0000'}
         headers.update(HEADERS)
         return headers
     
     def getRequestsSession(self):
-        self._login()
+        self._auth()
         return self._session
         
     def getChannels(self):
-        self._login()
+        self._auth()
         data = self._get(API + 'television/channels')
+        if 'data' not in data and 'message' in data:
+            #no channels
+            return []
         data = data['data']
         channels = []
         for item in data:
@@ -266,7 +290,7 @@ class RebitTv:
         return channels
 
     def getPlay(self, channelId):
-        self._login()
+        self._auth()
         data = self._get(API + 'television/channels/'+channelId+'/play')
         data = data['data']
         play = RebitTvPlay(
@@ -278,7 +302,7 @@ class RebitTv:
         return play
 
     def getChannelGuide(self, channelId, dfrom, dto):
-        self._login()
+        self._auth()
         data = self._get(API + 'television/channels/'+channelId+'/programmes', params={'filter[start][ge]':dfrom,'filter[start][le]':dto}, slow=True)
         data = data['data']
         programmes = []
