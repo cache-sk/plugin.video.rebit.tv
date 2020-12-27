@@ -129,16 +129,18 @@ class RebitTv:
     _password = ''
     _remove_oldest = False
     _remove_oldest_kodi = False
+    _choose_device = None
     _storage_path = ''
     _storage_file = ''
     _session = requests.Session()
     _data = RebitTvAuthData()
 
-    def __init__(self, username, password, storage_dir, remove_oldest, remove_oldest_kodi):
+    def __init__(self, username, password, storage_dir, remove_oldest, remove_oldest_kodi, choose_device):
         self._username = username
         self._password = password
         self._remove_oldest = remove_oldest
         self._remove_oldest_kodi = remove_oldest_kodi
+        self._choose_device = choose_device
         self._storage_path = storage_dir
         self._storage_file = os.path.join(self._storage_path, '%s.session' % username.lower())
         self._load_session()
@@ -155,7 +157,6 @@ class RebitTv:
                 self._data.__dict__ = json.load(f)
 
     def _auth(self):
-
         if self._data.is_populated():
             if self._data.is_valid():
                 return
@@ -187,22 +188,23 @@ class RebitTv:
 
         del headers['Content-Type']
         headers.update({'Authorization':'Bearer ' + self._data.access_token})
-        
+        print 'rtv have token'
         #need client ID, remove oldest clients until it works
         clientId = None
-        if self._remove_oldest:
-            while clientId is None:
-                resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
-                try:
-                    #print(resp.content)
-                    data = resp.json()['data']
-                    clientId = data['id']
-                except Exception as e:
-                    #too many devices?!
-                    resp = self._session.get(API + 'television/clients', headers=headers)
-                    oldest = None
+        
+        while clientId is None:
+            resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
+            try:
+                #print(resp.content)
+                data = resp.json()['data']
+                clientId = data['id']
+            except Exception as e:
+                #too many devices?!
+                resp = self._session.get(API + 'television/clients', headers=headers)
+                clients = resp.json()['data']
+                oldest = None
+                if self._remove_oldest:
                     oldestKodi = None
-                    clients = resp.json()['data']
                     for client in clients:
                         if oldest is None:
                             oldest = client
@@ -223,40 +225,50 @@ class RebitTv:
                                     oldestKodi = client
                     if self._remove_oldest_kodi and oldestKodi is not None:
                         oldest = oldestKodi
-                    resp = self._session.delete(API + 'television/clients/'+oldest['id'], json=CLIENT, headers=headers)
-                    time.sleep(1)
-        else:
-            pass
-            #dialog!
+                else:
+                    oldest = self._choose_device(clients)
+                    
+                resp = self._session.delete(API + 'television/clients/'+oldest['id'], json=CLIENT, headers=headers)
+                time.sleep(1)
 
         self._data.client_id = clientId
         
         self._store_session()
         
     def _refresh_token(self):
-        #print 'refreshing token'
-        now = time.time()
-        headers = {
-            'Content-Type':'application/json;charset=utf-8',
-            'Authorization':'Bearer ' + self._data.refresh_token
-        }
-        headers.update(HEADERS)
-        resp = self._session.post(API + 'auth/auth', headers=headers)
+        try:
+            #print 'refreshing token'
+            now = time.time()
+            headers = {
+                'Content-Type':'application/json;charset=utf-8',
+                'Authorization':'Bearer ' + self._data.refresh_token
+            }
+            headers.update(HEADERS)
+            resp = self._session.post(API + 'auth/auth', headers=headers)
+            
+            #if resp.status_code != 200:
+            #    raise UserInvalidException
+            
+            data = resp.json()['data']
+            self._data.access_token = data['access_token']
+            self._data.expire_in = now + int(data['expire_in'])
+            self._data.refresh_token = data['refresh_token']
+            self._data.user_id = data['user_id']
+            
+            self._store_session()
+        except:
+            #probably 403, data not in response
+            self._data.clear()
     
-        #if resp.status_code != 200:
-        #    raise UserInvalidException
-        
-        data = resp.json()['data']
-        self._data.access_token = data['access_token']
-        self._data.expire_in = now + int(data['expire_in'])
-        self._data.refresh_token = data['refresh_token']
-        self._data.user_id = data['user_id']
-        
-        self._store_session()
+    def _reconnect(self):
+        self._data.expire_in = 0
+        self._auth()
+    
     
     def _get(self, url, params={}, dheaders={}, slow=False):
         doIt = True
         while doIt:
+            print "rtv while get"
             headers = {}
             headers.update(dheaders)
             headers.update(self.getHeaders())
@@ -269,7 +281,7 @@ class RebitTv:
                 else:
                     time.sleep(random.randint(1,2) + random.random())
             elif ('code' in data and data['code'] == 403) or ('message' in data and data['message'] == 'The access token is invalid.'):
-                self._auth()
+                self._reconnect()
             else:
                 return data
 

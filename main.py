@@ -5,9 +5,10 @@
 # License: AGPL v.3 https://www.gnu.org/licenses/agpl-3.0.html
 
 import sys, os, io
-import xbmc, xbmcaddon, xbmcgui, xbmcplugin
+import xbmcaddon, xbmcgui, xbmcplugin
 import traceback
 import re
+import time, datetime
 import rebittv
 
 try:
@@ -28,13 +29,30 @@ except AttributeError:
     pass
 
 _username = xbmcplugin.getSetting(_handle, 'username')
-_password = xbmcplugin.getSetting(_handle, 'password') 
+_password = xbmcplugin.getSetting(_handle, 'password')
+_remove_oldest = 'true' == xbmcplugin.getSetting(_handle, 'remove_oldest_device')
+_remove_oldest_kodi = 'true' == xbmcplugin.getSetting(_handle, 'remove_oldest_kodi')
 
 def get_url(**kwargs):
     return '{0}?{1}'.format(_url, urlencode(kwargs, 'utf-8'))
 
+def getRtv():
+    def chooseDevice(devices):
+        def nameDevice(device):
+            anyDTI = device['updated_at'] if 'updated_at' in device and device['updated_at'] else (device['created_at'] if 'created_at' in device and device['created_at'] else None)
+            anyDTI = ('; ' + datetime.datetime.fromtimestamp(anyDTI).strftime("%d.%m.%Y, %H:%M:%S")) if anyDTI is not None else ''
+            return device['title'] + anyDTI if 'title' in device else _addon.getLocalizedString(30302)
+        dialog = xbmcgui.Dialog()
+        opts = ['%s' % (nameDevice(device)) for device in devices]
+        index = dialog.select(_addon.getLocalizedString(30301), opts)
+        if index != -1:
+            return devices[index]
+        else:
+            return chooseDevice(devices)
+    return rebittv.RebitTv(_username, _password, _profile, _remove_oldest, _remove_oldest_kodi, chooseDevice)
+
 def root():
-    rtv = rebittv.RebitTv(_username, _password, _profile)
+    rtv = getRtv()
     channels = rtv.getChannels()
     for channel in channels:
         list_item = xbmcgui.ListItem(label=channel.title)
@@ -47,8 +65,10 @@ def root():
     xbmcplugin.endOfDirectory(_handle)
 
 def play(cid):
-    rtv = rebittv.RebitTv(_username, _password, _profile)
+    rtv = getRtv()
+    print 'have rtv'
     stream = rtv.getPlay(cid)
+    print 'have stream'
     if stream.link != '':
         headers = rtv.getHeaders()
         li = xbmcgui.ListItem(path=stream.link+'|'+urlencode(headers))
@@ -68,6 +88,7 @@ def router(params):
             root()
     else:
         root()
+
 
 if __name__ == '__main__':
     router(dict(parse_qsl(sys.argv[2][1:])))

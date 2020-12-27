@@ -55,6 +55,14 @@ msgctxt "#30204"
 msgid "Proces nastavenia dokončený."
 msgstr "Proces nastavenia dokončený."
 
+msgctxt "#30301"
+msgid "Vyberte zariadenie na vymazanie"
+msgstr "Vyberte zariadenie na vymazanie"
+
+msgctxt "#30302"
+msgid "neznáme zariadenie"
+msgstr "neznáme zariadenie"
+
 msgctxt "#30501"
 msgid "Používateľ nieje definovaný!"
 msgstr "Používateľ nieje definovaný!"
