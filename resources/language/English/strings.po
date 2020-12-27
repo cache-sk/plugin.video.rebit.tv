@@ -31,6 +31,14 @@ msgctxt "#30106"
 msgid "Reštartovať PVR IPTV Simple Client po vygenerovaní"
 msgstr "Reštartovať PVR IPTV Simple Client po vygenerovaní"
 
+msgctxt "#30107"
+msgid "Vyradiť automaticky najstaršie zariadenie"
+msgstr "Vyradiť automaticky najstaršie zariadenie"
+
+msgctxt "#30108"
+msgid "Vyradiť automaticky len zariadenie s 'Kodi' v názve, ak existuje"
+msgstr "Vyradiť automaticky len zariadenie s 'Kodi' v názve, ak existuje"
+
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
 msgstr "Playlist a epg vygenerované"

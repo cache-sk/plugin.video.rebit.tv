@@ -127,14 +127,18 @@ class RebitTvAuthData:
 class RebitTv:
     _username = ''
     _password = ''
+    _remove_oldest = False
+    _remove_oldest_kodi = False
     _storage_path = ''
     _storage_file = ''
     _session = requests.Session()
     _data = RebitTvAuthData()
 
-    def __init__(self, username, password, storage_dir):
+    def __init__(self, username, password, storage_dir, remove_oldest, remove_oldest_kodi):
         self._username = username
         self._password = password
+        self._remove_oldest = remove_oldest
+        self._remove_oldest_kodi = remove_oldest_kodi
         self._storage_path = storage_dir
         self._storage_file = os.path.join(self._storage_path, '%s.session' % username.lower())
         self._load_session()
@@ -186,37 +190,47 @@ class RebitTv:
         
         #need client ID, remove oldest clients until it works
         clientId = None
-        while clientId is None:
-            resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
-            try:
-                #print(resp.content)
-                data = resp.json()['data']
-                clientId = data['id']
-            except Exception as e:
-                #too many devices?!
-                resp = self._session.get(API + 'television/clients', headers=headers)
-                oldest = None
-                clients = resp.json()['data']
-                for client in clients:
-                    if oldest is None:
-                        oldest = client
-                    else:
-                        ot = oldest['updated_at'] if 'updated_at' in oldest and oldest['updated_at'] else (oldest['created_at'] if 'created_at' in oldest and oldest['created_at'] else None)
-                        ct = client['updated_at'] if 'updated_at' in client and client['updated_at'] else (client['created_at'] if 'created_at' in client and client['created_at'] else None)
-                        if ct is not None:
-                            ct = datetime.datetime.fromtimestamp(ct)
-                            if ot is not None:
-                                ot = datetime.datetime.fromtimestamp(ot)
-                                if ct < ot:
-                                    oldest = client
-                        else:
+        if self._remove_oldest:
+            while clientId is None:
+                resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
+                try:
+                    #print(resp.content)
+                    data = resp.json()['data']
+                    clientId = data['id']
+                except Exception as e:
+                    #too many devices?!
+                    resp = self._session.get(API + 'television/clients', headers=headers)
+                    oldest = None
+                    oldestKodi = None
+                    clients = resp.json()['data']
+                    for client in clients:
+                        if oldest is None:
                             oldest = client
-                #print(oldest)
-                resp = self._session.delete(API + 'television/clients/'+oldest['id'], json=CLIENT, headers=headers)
-                time.sleep(1)
-            
-        self._data.client_id = clientId
+                        else:
+                            ot = oldest['updated_at'] if 'updated_at' in oldest and oldest['updated_at'] else (oldest['created_at'] if 'created_at' in oldest and oldest['created_at'] else None)
+                            ct = client['updated_at'] if 'updated_at' in client and client['updated_at'] else (client['created_at'] if 'created_at' in client and client['created_at'] else None)
+                            if ct is not None:
+                                ct = datetime.datetime.fromtimestamp(ct)
+                                if ot is not None:
+                                    ot = datetime.datetime.fromtimestamp(ot)
+                                    if ct < ot:
+                                        oldest = client
+                                        if 'title' in client and 'Kodi' in client['title']:
+                                            oldestKodi = client
+                            else:
+                                oldest = client
+                                if 'title' in client and 'Kodi' in client['title']:
+                                    oldestKodi = client
+                    if self._remove_oldest_kodi and oldestKodi is not None:
+                        oldest = oldestKodi
+                    resp = self._session.delete(API + 'television/clients/'+oldest['id'], json=CLIENT, headers=headers)
+                    time.sleep(1)
+        else:
+            pass
+            #dialog!
 
+        self._data.client_id = clientId
+        
         self._store_session()
         
     def _refresh_token(self):
