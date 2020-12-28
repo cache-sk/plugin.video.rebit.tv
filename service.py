@@ -14,27 +14,39 @@ import xbmcaddon
 import traceback
 import string
 import random
+import shared
 
 class RebbitMonitor(xbmc.Monitor):
     _addon = None
-    _profile = ''
+    _workdir = ''
     _next_update = 0
+    
+    def _setWorkdir(self):
+        if 'true' == self._addon.getSetting('gentoaddon'):
+            self._workdir = xbmc.translatePath(self._addon.getAddonInfo('profile'))
+        else:
+            self._workdir = self._addon.getSetting('gentofolder')
+            
+        try:
+            self._workdir = self._workdir.decode("utf-8")
+        except AttributeError:
+            pass
+            
+        if "" == self._workdir:
+            raise rebittv.FolderNotExistException
 
     def __init__(self):
         xbmc.Monitor.__init__(self)
         self._addon = xbmcaddon.Addon()
-        self._profile = xbmc.translatePath(self._addon.getAddonInfo('profile'))
-        try:
-            self._profile = self._profile.decode("utf-8")
-        except AttributeError:
-            pass
-        ts = self._addon.getSetting('gen_next_update')
+        self._setWorkdir()
+        
+        ts = self._addon.getSetting('genall_next_update')
         self._next_update = datetime.datetime.now() if ts == '' else datetime.datetime.fromtimestamp(float(ts))
         #cleanup
-        if os.path.exists(self._profile):
-            files_to_remove = [f for f in os.listdir(self._profile) if os.path.isfile(os.path.join(self._profile, f)) and (f.endswith('.work.xml') or f.endswith('.work.m3u'))]
+        if os.path.exists(self._workdir):
+            files_to_remove = [f for f in os.listdir(self._workdir) if os.path.isfile(os.path.join(self._workdir, f)) and (f.endswith('.work.xml') or f.endswith('.work.m3u'))]
             for f in files_to_remove:
-                os.unlink(os.path.join(self._profile, f))
+                os.unlink(os.path.join(self._workdir, f))
 
     def __del__(self):
         print('rebit.tv service destroyed')
@@ -49,6 +61,7 @@ class RebbitMonitor(xbmc.Monitor):
 
     def onSettingsChanged(self):
         self._addon = xbmcaddon.Addon()  # refresh for updated settings!
+        self._setWorkdir()
         if not self.abortRequested():
             try:
                 self.update()
@@ -66,17 +79,19 @@ class RebbitMonitor(xbmc.Monitor):
         if not gse:
             return False
 
-        if not os.path.exists(self._profile):
-            os.makedirs(self._profile)
+        if not os.path.exists(self._workdir):
+            os.makedirs(self._workdir)
         
-        epg_workpath = os.path.join(self._profile, get_random_string(8) + '.work.xml')
-        epg_path = os.path.join(self._profile, 'epg.xml')
-        playlist_workpath = os.path.join(self._profile, get_random_string(8) + '.work.m3u')
-        playlist_path = os.path.join(self._profile, 'playlist.m3u')
+        epg_workpath = os.path.join(self._workdir, get_random_string(8) + '.work.xml')
+        epg_path = os.path.join(self._workdir, 'epg.xml')
+        playlist_workpath = os.path.join(self._workdir, get_random_string(8) + '.work.m3u')
+        playlist_path = os.path.join(self._workdir, 'playlist.m3u')
 
         _username = self._addon.getSetting('username')
         _password = self._addon.getSetting('password')
-        rtv = rebittv.RebitTv(_username, _password, self._profile)
+        _remove_oldest = 'true' == self._addon.getSetting('remove_oldest_device')
+        _remove_oldest_kodi = 'true' == self._addon.getSetting('remove_oldest_kodi')
+        rtv = rebittv.RebitTv(_username, _password, self._workdir, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
         rtv.generate(playlist_workpath,epg_workpath)
         
         if os.path.isfile(epg_path):

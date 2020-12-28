@@ -52,6 +52,10 @@ class UserInvalidException(RebitTvException):
     def __init__(self):
         self.id = 30502
 
+class FolderNotExistException(RebitTvException):
+    def __init__(self):
+        self.id = 30503
+
 class RebitTvChannel:
     id = ''
     channel = None
@@ -79,6 +83,9 @@ class RebitTvPlay:
         self.link = link
         self.protocol = protocol
         self.quality = quality
+        
+    def __str__(self):
+        return "[id=%s, cid=%s, link=%s, protocol=%s, quality=%s]" % (self.id,self.cid,self.link,self.protocol,self.quality)
     
 class RebitTvProgramme:
     id = ''
@@ -188,7 +195,6 @@ class RebitTv:
 
         del headers['Content-Type']
         headers.update({'Authorization':'Bearer ' + self._data.access_token})
-        print 'rtv have token'
         #need client ID, remove oldest clients until it works
         clientId = None
         
@@ -268,7 +274,6 @@ class RebitTv:
     def _get(self, url, params={}, dheaders={}, slow=False):
         doIt = True
         while doIt:
-            print "rtv while get"
             headers = {}
             headers.update(dheaders)
             headers.update(self.getHeaders())

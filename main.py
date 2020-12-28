@@ -10,6 +10,7 @@ import traceback
 import re
 import time, datetime
 import rebittv
+import shared
 
 try:
     from urllib import urlencode
@@ -23,6 +24,7 @@ _url = sys.argv[0]
 _handle = int(sys.argv[1])
 _addon = xbmcaddon.Addon()
 _profile = xbmc.translatePath( _addon.getAddonInfo('profile'))
+
 try:
     _profile = _profile.decode("utf-8")
 except AttributeError:
@@ -37,19 +39,7 @@ def get_url(**kwargs):
     return '{0}?{1}'.format(_url, urlencode(kwargs, 'utf-8'))
 
 def getRtv():
-    def chooseDevice(devices):
-        def nameDevice(device):
-            anyDTI = device['updated_at'] if 'updated_at' in device and device['updated_at'] else (device['created_at'] if 'created_at' in device and device['created_at'] else None)
-            anyDTI = ('; ' + datetime.datetime.fromtimestamp(anyDTI).strftime("%d.%m.%Y, %H:%M:%S")) if anyDTI is not None else ''
-            return device['title'] + anyDTI if 'title' in device else _addon.getLocalizedString(30302)
-        dialog = xbmcgui.Dialog()
-        opts = ['%s' % (nameDevice(device)) for device in devices]
-        index = dialog.select(_addon.getLocalizedString(30301), opts)
-        if index != -1:
-            return devices[index]
-        else:
-            return chooseDevice(devices)
-    return rebittv.RebitTv(_username, _password, _profile, _remove_oldest, _remove_oldest_kodi, chooseDevice)
+    return rebittv.RebitTv(_username, _password, _profile, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
 
 def root():
     rtv = getRtv()
@@ -66,9 +56,7 @@ def root():
 
 def play(cid):
     rtv = getRtv()
-    print 'have rtv'
     stream = rtv.getPlay(cid)
-    print 'have stream'
     if stream.link != '':
         headers = rtv.getHeaders()
         li = xbmcgui.ListItem(path=stream.link+'|'+urlencode(headers))
