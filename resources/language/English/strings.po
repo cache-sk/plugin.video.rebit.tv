@@ -31,6 +31,22 @@ msgctxt "#30106"
 msgid "Reštartovať PVR IPTV Simple Client po vygenerovaní"
 msgstr "Reštartovať PVR IPTV Simple Client po vygenerovaní"
 
+msgctxt "#30107"
+msgid "Vyradiť automaticky najstaršie zariadenie"
+msgstr "Vyradiť automaticky najstaršie zariadenie"
+
+msgctxt "#30108"
+msgid "Vyradiť automaticky len zariadenie s 'Kodi' v názve, ak existuje"
+msgstr "Vyradiť automaticky len zariadenie s 'Kodi' v názve, ak existuje"
+
+msgctxt "#30109"
+msgid "Generovať do pracovného adresáru doplnku"
+msgstr "Generovať do pracovného adresáru doplnku"
+
+msgctxt "#30110"
+msgid "Adresár pre generovanie playlistu a epg"
+msgstr "Adresár pre generovanie playlistu a epg"
+
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
 msgstr "Playlist a epg vygenerované"
@@ -47,6 +63,14 @@ msgctxt "#30204"
 msgid "Proces nastavenia dokončený."
 msgstr "Proces nastavenia dokončený."
 
+msgctxt "#30301"
+msgid "Vyberte zariadenie na vymazanie"
+msgstr "Vyberte zariadenie na vymazanie"
+
+msgctxt "#30302"
+msgid "neznáme zariadenie"
+msgstr "neznáme zariadenie"
+
 msgctxt "#30501"
 msgid "Používateľ nieje definovaný!"
 msgstr "Používateľ nieje definovaný!"
@@ -54,3 +78,8 @@ msgstr "Používateľ nieje definovaný!"
 msgctxt "#30502"
 msgid "Neplatný používateľ!"
 msgstr "Neplatný používateľ!"
+
+msgctxt "#30503"
+msgid "Adresár nezadaný!"
+msgstr "Adresár nezadaný!"
+

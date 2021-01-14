@@ -6,6 +6,7 @@ import os
 import io
 import xbmcgui
 import xbmcaddon
+import rebittv
 
 def set_pisc():
     _self = xbmcaddon.Addon(id='plugin.video.rebit.tv')
@@ -18,16 +19,23 @@ def set_pisc():
     if not xbmcgui.Dialog().yesno(_self.getAddonInfo('name'), _self.getLocalizedString(30203)):
         return
         
-    _profile = xbmc.translatePath(_self.getAddonInfo('profile'))
+    if 'true' == _self.getSetting('gentoaddon'):
+        _workdir = xbmc.translatePath(_self.getAddonInfo('profile'))
+    else:
+        _workdir = _self.getSetting('gentofolder')
     try:
-        _profile = _profile.decode("utf-8")
+        _workdir = _workdir.decode("utf-8")
     except AttributeError:
         pass
-    if not os.path.exists(_profile):
-        os.makedirs(_profile)
+        
+    if "" == _workdir:
+        raise rebittv.FolderNotExistException
+        
+    if not os.path.exists(_workdir):
+        os.makedirs(_workdir)
     
-    playlist = os.path.join(_profile, 'playlist.m3u')
-    guide = os.path.join(_profile, 'epg.xml')
+    playlist = os.path.join(_workdir, 'playlist.m3u')
+    guide = os.path.join(_workdir, 'epg.xml')
     
     if not os.path.exists(playlist) or not os.path.exists(guide):
         with io.open(playlist, 'w', encoding='utf8') as m3u:
