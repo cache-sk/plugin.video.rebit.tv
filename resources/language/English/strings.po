@@ -47,6 +47,14 @@ msgctxt "#30110"
 msgid "Adresár pre generovanie playlistu a epg"
 msgstr "Adresár pre generovanie playlistu a epg"
 
+msgctxt "#30111"
+msgid "Interval generovania v hodinách"
+msgstr "Interval generovania v hodinách"
+
+msgctxt "#30112"
+msgid "Koľko dní generovať"
+msgstr "Koľko dní generovať"
+
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
 msgstr "Playlist a epg vygenerované"

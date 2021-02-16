@@ -41,7 +41,7 @@ class RebbitMonitor(xbmc.Monitor):
         self._setWorkdir()
         
         ts = self._addon.getSetting('genall_next_update')
-        self._next_update = datetime.datetime.now() if ts == '' else datetime.datetime.fromtimestamp(float(ts))
+        self._next_update = datetime.datetime.fromtimestamp(0) if ts == '' else datetime.datetime.fromtimestamp(float(ts))
         #cleanup
         if os.path.exists(self._workdir):
             files_to_remove = [f for f in os.listdir(self._workdir) if os.path.isfile(os.path.join(self._workdir, f)) and (f.endswith('.work.xml') or f.endswith('.work.m3u'))]
@@ -63,11 +63,8 @@ class RebbitMonitor(xbmc.Monitor):
         self._addon = xbmcaddon.Addon()  # refresh for updated settings!
         self._setWorkdir()
         if not self.abortRequested():
-            try:
-                self.update()
-            except Exception as e:
-                traceback.print_exc()
-                self.notify(str(e), True)
+            self._next_update = datetime.datetime.fromtimestamp(0)
+            self.tick()
 
     def schedule_next(self, seconds):
         dt = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
@@ -78,6 +75,8 @@ class RebbitMonitor(xbmc.Monitor):
         gse = 'true' == self._addon.getSetting('genall')
         if not gse:
             return False
+
+        print('Updating rebit.tv')
 
         if not os.path.exists(self._workdir):
             os.makedirs(self._workdir)
@@ -92,7 +91,7 @@ class RebbitMonitor(xbmc.Monitor):
         _remove_oldest = 'true' == self._addon.getSetting('remove_oldest_device')
         _remove_oldest_kodi = 'true' == self._addon.getSetting('remove_oldest_kodi')
         rtv = rebittv.RebitTv(_username, _password, self._workdir, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
-        rtv.generate(playlist_workpath,epg_workpath)
+        rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')))
         
         if os.path.isfile(epg_path):
             os.unlink(epg_path)
@@ -118,7 +117,7 @@ class RebbitMonitor(xbmc.Monitor):
     def tick(self):
         if datetime.datetime.now() > self._next_update:
             try:
-                self.schedule_next(12 * 60 * 60)
+                self.schedule_next(int(self._addon.getSetting('gen_delay')) * 60 * 60)
                 self.update()
             except Exception as e:
                 traceback.print_exc()
