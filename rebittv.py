@@ -365,7 +365,7 @@ class RebitTv:
                     m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s",%s\n' % (c.id, c.icon, c.title, html_escape(c.title,{',':'-'})))
                     m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
                     xml.write(u'<channel id="%s">\n' % c.id)
-                    xml.write(u'<display-name>%s</display-name>\n' % c.title)
+                    xml.write(u'<display-name>%s</display-name>\n' % html_escape(c.title))
                     xml.write(u'</channel>\n')
                 for c in channels:
                     if c.guide:
@@ -374,8 +374,7 @@ class RebitTv:
                             if e.start is not None and e.stop is not None:
                                 xml.write(u'<programme channel="%s" start="%s" stop="%s">\n' % (c.id, e.start.strftime('%Y%m%d%H%M%S'), e.stop.strftime('%Y%m%d%H%M%S')))
                                 xml.write(u'<title>%s</title>\n' % html_escape(e.title))
-                                xml.write(u'<desc>%s</desc>\n' % html_escape(e.description
-                                ))
+                                xml.write(u'<desc>%s</desc>\n' % html_escape(e.description))
                                 xml.write(u'</programme>\n')
                 m3u.write(u'#EXT-X-ENDLIST\n')
                 xml.write(u'</tv>\n')
