@@ -11,6 +11,7 @@ import random
 import requests
 import json
 import time, datetime
+import calendar
 import _strptime
 import xbmc, platform
 
@@ -37,7 +38,6 @@ html_escape_table = {
 
 def html_escape(text, table=html_escape_table):
     return "".join(table.get(c, c) for c in text)
-
 
 class RebitTvException(Exception):
     def __init__(self, id):
@@ -331,20 +331,22 @@ class RebitTv:
             data['protocol'] if 'protocol' in data and data['protocol'] else '',
             data['quality'] if 'quality' in data and data['quality'] else '')
         return play
-
+    
     def getChannelGuide(self, channelId, dfrom, dto):
         self._auth()
         data = self._get(API + 'television/channels/'+channelId+'/programmes', params={'filter[start][ge]':dfrom,'filter[start][le]':dto}, slow=True)
         data = data['data']
         programmes = []
+        delta = datetime.datetime.now().utcoffset()
         for item in data:
+            print("timestamps",item['start'],item['stop'])
             programme = RebitTvProgramme(
                 item['id'] if 'id' in item and item['id'] else '',
                 item['title'] if 'title' in item and item['title'] else '',
                 item['subtitle'] if 'subtitle' in item and item['subtitle'] else '',
                 item['description'] if 'description' in item and item['description'] else '',
-                datetime.datetime.fromtimestamp(item['start']) if 'start' in item and item['start'] else None,
-                datetime.datetime.fromtimestamp(item['stop']) if 'stop' in item and item['stop'] else None)
+                datetime.datetime.utcfromtimestamp(item['start']) if 'start' in item and item['start'] else None,
+                datetime.datetime.utcfromtimestamp(item['stop']) if 'stop' in item and item['stop'] else None)
             programmes.append(programme)
         return programmes
 
