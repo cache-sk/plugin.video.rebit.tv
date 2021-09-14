@@ -91,3 +91,54 @@ msgctxt "#30503"
 msgid "Adresár nezadaný!"
 msgstr "Adresár nezadaný!"
 
+msgctxt "#30601"
+msgid "Live vysielanie"
+msgstr "Live vysielanie"
+
+msgctxt "#30602"
+msgid "Archív"
+msgstr "Archív"
+
+msgctxt "#30605"
+msgid "nasledujúci deň"
+msgstr "nasledujúci deň"
+
+msgctxt "#30606"
+msgid "predošlý deň"
+msgstr "predošlý deň"
+
+msgctxt "#30611"
+msgid "dnes"
+msgstr "dnes"
+
+msgctxt "#30612"
+msgid "včera"
+msgstr "včera"
+
+msgctxt "#30620"
+msgid "pondelok"
+msgstr "pondelok"
+
+msgctxt "#30621"
+msgid "utorok"
+msgstr "utorok"
+
+msgctxt "#30622"
+msgid "streda"
+msgstr "streda"
+
+msgctxt "#30623"
+msgid "štvrtok"
+msgstr "štvrtok"
+
+msgctxt "#30624"
+msgid "piatok"
+msgstr "piatok"
+
+msgctxt "#30625"
+msgid "sobota"
+msgstr "sobota"
+
+msgctxt "#30626"
+msgid "nedeľa"
+msgstr "nedeľa"

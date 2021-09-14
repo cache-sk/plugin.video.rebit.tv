@@ -62,13 +62,15 @@ class RebitTvChannel:
     icon = ''
     title = ''
     guide = False
+    archive = None
 
-    def __init__(self, id, channel, icon, title, guide):
+    def __init__(self, id, channel, icon, title, guide, archive):
         self.id = id
         self.channel = channel
         self.icon = icon
         self.title = title
         self.guide = guide
+        self.archive = archive
     
 class RebitTvPlay:
     id = ''
@@ -89,14 +91,16 @@ class RebitTvPlay:
     
 class RebitTvProgramme:
     id = ''
+    cid = ''
     title = ''
     subtitle = ''
     description = ''
     start = None
     stop = None
 
-    def __init__(self, id, title, subtitle, description, start, stop):
-        #self.id = id
+    def __init__(self, id, cid, title, subtitle, description, start, stop):
+        self.id = id
+        self.cid = cid
         self.title = title
         self.subtitle = subtitle
         self.description = description
@@ -143,6 +147,7 @@ class RebitTv:
     _data = RebitTvAuthData()
 
     def __init__(self, username, password, storage_dir, remove_oldest, remove_oldest_kodi, choose_device):
+        #print("rtv init",username, password, storage_dir, remove_oldest, remove_oldest_kodi, choose_device)
         self._username = username
         self._password = password
         self._remove_oldest = remove_oldest
@@ -166,7 +171,10 @@ class RebitTv:
     def _auth(self):
         if self._data.is_populated():
             if self._data.is_valid():
-                return
+                headers = self.getHeaders()
+                resp = self._session.post(API + 'television/client/heartbeat', headers=headers) #json={'headers':headers}
+                if resp.status_code == 204:
+                    return
             else:
                 self._refresh_token()
                 if self._data.is_valid():
@@ -291,7 +299,7 @@ class RebitTv:
                 return data
 
     def getHeaders(self):
-        self._auth()
+        #self._auth() - this should be called before!
         headers = {'Authorization':'Bearer ' + self._data.access_token, 'x-television-client-id':self._data.client_id, 'x-child-lock-code':'0000'}
         headers.update(HEADERS)
         return headers
@@ -314,15 +322,19 @@ class RebitTv:
                 int(item['channel']),
                 item['icon'],
                 item['title'],
-                item['guide'])
+                item['guide'],
+                None if item['archive'] == 'null' else item['archive'])
             channels.append(channel)
 
         channels = sorted(channels, key = lambda i: i.channel)
         return channels
 
-    def getPlay(self, channelId):
+    def getPlay(self, channelId, programmeId = None):
         self._auth()
-        data = self._get(API + 'television/channels/'+channelId+'/play')
+        url = 'television/channels/'+channelId+'/play'
+        if programmeId is not None:
+            url += '/' + programmeId
+        data = self._get(API + url)
         data = data['data']
         play = RebitTvPlay(
             data['id'] if 'id' in data and data['id'] else '',
@@ -342,6 +354,7 @@ class RebitTv:
             print("timestamps",item['start'],item['stop'])
             programme = RebitTvProgramme(
                 item['id'] if 'id' in item and item['id'] else '',
+                item['channel_id'] if 'channel_id' in item and item['channel_id'] else '',
                 item['title'] if 'title' in item and item['title'] else '',
                 item['subtitle'] if 'subtitle' in item and item['subtitle'] else '',
                 item['description'] if 'description' in item and item['description'] else '',
