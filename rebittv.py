@@ -335,7 +335,13 @@ class RebitTv:
         if programmeId is not None:
             url += '/' + programmeId
         data = self._get(API + url)
-        data = data['data']
+        try:
+            data = data['data']
+        except Exception as e:
+            if 'message' in data:
+                raise Exception(data['message'])
+            else:
+                raise e
         play = RebitTvPlay(
             data['id'] if 'id' in data and data['id'] else '',
             data['channel_id'] if 'channel_id' in data and data['channel_id'] else '',
@@ -349,7 +355,7 @@ class RebitTv:
         data = self._get(API + 'television/channels/'+channelId+'/programmes', params={'filter[start][ge]':dfrom,'filter[start][le]':dto}, slow=True)
         data = data['data']
         programmes = []
-        delta = datetime.datetime.now().utcoffset()
+        #delta = datetime.datetime.now().utcoffset()
         for item in data:
             print("timestamps",item['start'],item['stop'])
             programme = RebitTvProgramme(

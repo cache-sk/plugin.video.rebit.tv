@@ -44,6 +44,16 @@ def dec_utf8(str):
     except AttributeError:
         return str  # Python 3.x
 
+def utc2local(utc):
+    epoch = time.mktime(utc.timetuple())
+    offset = datetime.datetime.fromtimestamp(epoch) - datetime.datetime.utcfromtimestamp(epoch)
+    return utc + offset
+
+def local2utc(local):
+    epoch = time.mktime(local.timetuple())
+    offset = datetime.datetime.utcfromtimestamp(epoch) - datetime.datetime.fromtimestamp(epoch)
+    return local + offset
+
 def getRtv():
     return rebittv.RebitTv(_username, _password, _profile, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
 
@@ -128,18 +138,20 @@ def archivePrograms(cid, days, day, first):
         xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 
     rtv = getRtv()
-    programmes = rtv.getChannelGuide(cid,start_date,to_date)
+    programmes = rtv.getChannelGuide(cid,local2utc(start_date),local2utc(to_date))
     for programme in programmes:
-        title = dec_utf8(programme.start.strftime('%H:%M'))
-        title += ' - '
-        title += programme.title
-        list_item = xbmcgui.ListItem(label=title)
-        list_item.setInfo('video', {'title': title,'sorttitle':title})
-        list_item.setArt({'icon': 'DefaultAddonPVRClient.png'})
-        link = get_url(action='archivePlay', cid=programme.cid, pid=programme.id)
-        is_folder = False
-        list_item.setProperty('IsPlayable', 'true')
-        xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
+        if not today or (today and utc2local(programme.stop) < now):
+            title = dec_utf8(utc2local(programme.start).strftime('%H:%M'))
+            title += ' - '
+            title += programme.title
+            duration = int((programme.stop - programme.start).total_seconds())
+            list_item = xbmcgui.ListItem(label=title)
+            list_item.setInfo('video', {'title': title,'duration':duration,'sorttitle':title})
+            list_item.setArt({'icon': 'DefaultAddonPVRClient.png'})
+            link = get_url(action='archivePlay', cid=programme.cid, pid=programme.id)
+            is_folder = False
+            list_item.setProperty('IsPlayable', 'true')
+            xbmcplugin.addDirectoryItem(_handle, link, list_item, is_folder)
 
     if day > 0:
         list_item = xbmcgui.ListItem(label='9999 - '+_addon.getLocalizedString(30605))
@@ -155,7 +167,13 @@ def archivePrograms(cid, days, day, first):
         
 def archivePlay(cid,pid):
     rtv = getRtv()
-    stream = rtv.getPlay(cid,pid)
+    try:
+        stream = rtv.getPlay(cid,pid)
+    except Exception as e:
+        traceback.print_exc()
+        xbmcgui.Dialog().ok(_addon.getAddonInfo('name'), str(e))
+        xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
+        return
     if stream.link != '':
         headers = rtv.getHeaders()
         li = xbmcgui.ListItem(path=stream.link+'|'+urlencode(headers))
