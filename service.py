@@ -8,6 +8,7 @@ import datetime
 import time
 import io
 import os
+import re
 import rebittv
 import xbmc
 import xbmcaddon
@@ -15,6 +16,8 @@ import traceback
 import string
 import random
 import shared
+
+CAN_CATCHUP = float(re.split("[, \-!?:]+", xbmc.getInfoLabel('System.BuildVersion'))[0]) >= 19
 
 class RebbitMonitor(xbmc.Monitor):
     _addon = None
@@ -91,7 +94,7 @@ class RebbitMonitor(xbmc.Monitor):
         _remove_oldest = 'true' == self._addon.getSetting('remove_oldest_device')
         _remove_oldest_kodi = 'true' == self._addon.getSetting('remove_oldest_kodi')
         rtv = rebittv.RebitTv(_username, _password, self._workdir, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
-        rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')))
+        rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')),CAN_CATCHUP)
         
         if os.path.isfile(epg_path):
             os.unlink(epg_path)

@@ -369,7 +369,7 @@ class RebitTv:
             programmes.append(programme)
         return programmes
 
-    def generate(self, playlist, guide, days=7):
+    def generate(self, playlist, guide, days=7, catchup=None):
         print('Generating rebit tv')
         dfrom = datetime.datetime.now() - datetime.timedelta(days=1)
         dto = dfrom + datetime.timedelta(days=days+1)
@@ -380,20 +380,24 @@ class RebitTv:
                 m3u.write(u'#EXTM3U\n')
                 xml.write(u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
                 xml.write(u'<tv>\n')
-                
                 channels = self.getChannels()
                 for c in channels:
-                    m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s",%s\n' % (c.id, c.icon, c.title, html_escape(c.title,{',':'-'})))
+                    m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlay&cid=%s&pid={catchup-id}"' % (c.archive, c.id) if c.archive is not None and catchup is not None else ' '
+                    m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
                     m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
                     xml.write(u'<channel id="%s">\n' % c.id)
                     xml.write(u'<display-name>%s</display-name>\n' % html_escape(c.title))
                     xml.write(u'</channel>\n')
                 for c in channels:
                     if c.guide:
-                        programmes = self.getChannelGuide(c.id, sdfrom, sdto)
+                        if catchup is not None and c.archive is not None:
+                            adfrom = dfrom - datetime.timedelta(days=c.archive)
+                            asdfrom = adfrom.strftime('%Y-%m-%dT23:00:00.000Z')
+                        programmes = self.getChannelGuide(c.id, asdfrom if asdfrom is not None else sdfrom, sdto)
                         for e in programmes:
                             if e.start is not None and e.stop is not None:
-                                xml.write(u'<programme channel="%s" start="%s" stop="%s">\n' % (c.id, e.start.strftime('%Y%m%d%H%M%S'), e.stop.strftime('%Y%m%d%H%M%S')))
+                                xmlCatchup = u' catchup-id="%s"' % (e.id) if catchup is not None else ' '
+                                xml.write(u'<programme channel="%s" start="%s" stop="%s"%s>\n' % (c.id, e.start.strftime('%Y%m%d%H%M%S'), e.stop.strftime('%Y%m%d%H%M%S'), xmlCatchup))
                                 xml.write(u'<title>%s</title>\n' % html_escape(e.title))
                                 xml.write(u'<desc>%s</desc>\n' % html_escape(e.description))
                                 xml.write(u'</programme>\n')
