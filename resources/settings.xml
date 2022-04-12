@@ -6,12 +6,16 @@
         <setting label="30103" type="text" option="hidden" id="password"/>
         <setting label="30107" type="bool" id="remove_oldest_device" default="true"/>
         <setting label="30108" type="bool" id="remove_oldest_kodi" default="false" enable="eq(-1,true)"/>
+        <setting type="sep"/>
         <setting label="30104" type="bool" id="genall" default="false"/>
         <setting label="30109" type="bool" id="gentoaddon" default="true" enable="eq(-1,true)"/>
         <setting label="30110" type="folder" id="gentofolder" default="" enable="eq(-1,false) + eq(-2,true)"/>
         <setting label="30111" type="slider" id="gen_delay" default="12" range="12,12,120" option="int" enable="eq(-3,true)"/>
-        <setting label="30112" type="slider" id="gen_days" default="7" range="1,1,7" option="int" enable="eq(-4,true)"/>
+        <setting label="30112" type="slider" id="gen_days" default="7" range="1,1,7" option="int" enable="eq(-4,true) + eq(2,false)"/>
         <setting label="30106" type="bool" id="restartpisc" default="false" enable="eq(-5,true)"/>
-        <setting label="30105" type="action" action="RunScript(special://home/addons/plugin.video.rebit.tv/pisc.py)" enable="eq(-6,true)"/>
+        <setting label="30115" type="bool" id="genplonly" default="false" enable="eq(-6,true)"/>
+        <setting label="30116" type="number" id="tolerance" default="60" enable="eq(-1,true)"/>
+        <setting type="sep"/>
+        <setting label="30105" type="action" action="RunScript(special://home/addons/plugin.video.rebit.tv/pisc.py)" enable="eq(-9,true) + eq(-3,false)"/>
     </category>
 </settings>

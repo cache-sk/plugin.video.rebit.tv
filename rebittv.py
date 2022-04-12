@@ -15,6 +15,11 @@ import calendar
 import _strptime
 import xbmc, platform
 
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
+
 HEADERS = {
     'Origin':'https://www.rebit.tv',
     'Referer':'https://www.rebit.tv',
@@ -38,6 +43,12 @@ html_escape_table = {
 
 def html_escape(text, table=html_escape_table):
     return "".join(table.get(c, c) for c in text)
+
+def enc_utf8(str):
+    try:
+        return str.encode("utf-8")  # Python 2.x
+    except AttributeError:
+        return str  # Python 3.x
 
 class RebitTvException(Exception):
     def __init__(self, id):
@@ -357,7 +368,6 @@ class RebitTv:
         programmes = []
         #delta = datetime.datetime.now().utcoffset()
         for item in data:
-            print("timestamps",item['start'],item['stop'])
             programme = RebitTvProgramme(
                 item['id'] if 'id' in item and item['id'] else '',
                 item['channel_id'] if 'channel_id' in item and item['channel_id'] else '',
@@ -370,7 +380,7 @@ class RebitTv:
         return programmes
 
     def generate(self, playlist, guide, days=7, catchup=None):
-        print('Generating rebit tv')
+        print('Generating rebit tv playlist and guide')
         dfrom = datetime.datetime.now() - datetime.timedelta(days=1)
         dto = dfrom + datetime.timedelta(days=days+1)
         sdfrom = dfrom.strftime('%Y-%m-%dT23:00:00.000Z')
@@ -382,7 +392,7 @@ class RebitTv:
                 xml.write(u'<tv>\n')
                 channels = self.getChannels()
                 for c in channels:
-                    m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlay&cid=%s&pid={catchup-id}"' % (c.archive, c.id) if c.archive is not None and catchup is not None else ' '
+                    m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlay&cid=%s&pid={catchup-id}"' % (c.archive, c.id) if c.archive is not None and catchup is not None and catchup else ' '
                     m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
                     m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
                     xml.write(u'<channel id="%s">\n' % c.id)
@@ -390,16 +400,29 @@ class RebitTv:
                     xml.write(u'</channel>\n')
                 for c in channels:
                     if c.guide:
-                        if catchup is not None and c.archive is not None:
+                        adfrom = None
+                        asdfrom = None
+                        if catchup is not None and catchup and c.archive is not None:
                             adfrom = dfrom - datetime.timedelta(days=c.archive)
                             asdfrom = adfrom.strftime('%Y-%m-%dT23:00:00.000Z')
                         programmes = self.getChannelGuide(c.id, asdfrom if asdfrom is not None else sdfrom, sdto)
                         for e in programmes:
                             if e.start is not None and e.stop is not None:
-                                xmlCatchup = u' catchup-id="%s"' % (e.id) if catchup is not None else ' '
+                                xmlCatchup = u' catchup-id="%s"' % (e.id) if catchup is not None and catchup else ' '
                                 xml.write(u'<programme channel="%s" start="%s" stop="%s"%s>\n' % (c.id, e.start.strftime('%Y%m%d%H%M%S'), e.stop.strftime('%Y%m%d%H%M%S'), xmlCatchup))
                                 xml.write(u'<title>%s</title>\n' % html_escape(e.title))
                                 xml.write(u'<desc>%s</desc>\n' % html_escape(e.description))
                                 xml.write(u'</programme>\n')
                 m3u.write(u'#EXT-X-ENDLIST\n')
                 xml.write(u'</tv>\n')
+
+    def generatePlaylistOnly(self, playlist, tolerance='60', catchup=None):
+        print('Generating rebit tv playlist')
+        with io.open(playlist, 'w', encoding='utf8') as m3u:
+            m3u.write(u'#EXTM3U\n')
+            channels = self.getChannels()
+            for c in channels:
+                m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlayTS&channelKey=%s&catchup_start_ts={utc}&catchup_end_ts={utcend}&tolerance=%s"' % (c.archive, quote_plus(enc_utf8(c.title)), tolerance) if c.archive is not None and catchup is not None and catchup else ' '
+                m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
+                m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
+            m3u.write(u'#EXT-X-ENDLIST\n')

@@ -101,7 +101,6 @@ def archiveDays(cid, days):
     now = datetime.datetime.now()
     for day in range(0, days+1):
         d = now - datetime.timedelta(days=day) if day > 0 else now
-        #print(day)
         title = _addon.getLocalizedString(30611) if day == 0 else _addon.getLocalizedString(30612) if day == 1 else dec_utf8(d.strftime('%d. %m.'))
         title = _addon.getLocalizedString(int('3062' + str(d.weekday()))) + ', ' + title
         list_item = xbmcgui.ListItem(label=title)
@@ -165,8 +164,9 @@ def archivePrograms(cid, days, day, first):
     xbmcplugin.addSortMethod(_handle, xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE) #SORT_METHOD_LABEL
     xbmcplugin.endOfDirectory(_handle, updateListing=not first)
         
-def archivePlay(cid,pid):
-    rtv = getRtv()
+def archivePlay(cid,pid,rtv=None):
+    if rtv is None:
+        rtv = getRtv()
     try:
         stream = rtv.getPlay(cid,pid)
     except Exception as e:
@@ -185,9 +185,47 @@ def archivePlay(cid,pid):
     else:
         xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
 
+def archivePlayTS(channelKey,catchup_start_ts,catchup_end_ts,tolerance="60"):
+    rtv = getRtv()
+    try:
+        channelKey = channelKey.lower()
+        catchup_start_ts = int(catchup_start_ts)
+        catchup_end_ts = int(catchup_end_ts)
+        tolerance = int(tolerance)
+        dfrom = local2utc(datetime.datetime.fromtimestamp(catchup_start_ts-tolerance))
+        dto = local2utc(datetime.datetime.fromtimestamp(catchup_start_ts+tolerance))
+        dffrom = local2utc(datetime.datetime.fromtimestamp(catchup_end_ts-tolerance))
+        dfto = local2utc(datetime.datetime.fromtimestamp(catchup_end_ts+tolerance))
+        cid = None
+        pid = None
+        channels = rtv.getChannels()
+        for channel in channels:
+            if channel.title.lower() == channelKey:
+                cid = channel.id
+                break
+        if cid is not None:
+            programmes = rtv.getChannelGuide(cid, dfrom, dto)
+            for programme in programmes:
+                if programme.stop >= dffrom and programme.stop <= dfto:
+                    pid = programme.id
+                    break
+        if cid is not None and pid is not None:
+            archivePlay(cid,pid,rtv)
+        else:
+            raise Exception(_addon.getLocalizedString(30900))
+    except Exception as e:
+        traceback.print_exc()
+        xbmcgui.Dialog().ok(_addon.getAddonInfo('name'), str(e))
+        xbmcplugin.setResolvedUrl(_handle, False, xbmcgui.ListItem())
+        return
+
 def menu():
     xbmcplugin.addDirectoryItem(_handle, get_url(action='channelList'), xbmcgui.ListItem(label=_addon.getLocalizedString(30601)), True)
     xbmcplugin.addDirectoryItem(_handle, get_url(action='archiveList'), xbmcgui.ListItem(label=_addon.getLocalizedString(30602)), True)
+#    list_item = xbmcgui.ListItem(label='TEST')
+#    list_item.setInfo('video', {'title': 'TEST'})
+#    list_item.setProperty('IsPlayable', 'true')
+#    xbmcplugin.addDirectoryItem(_handle, get_url(action='archivePlayTS',channelKey='Jednotka HD',catchup_start_ts='1649741400',catchup_end_ts='1649744940',tolerance='60'), list_item, False)
     xbmcplugin.endOfDirectory(_handle)
 
 def router(params):
@@ -204,6 +242,11 @@ def router(params):
             archivePrograms(params['cid'],int(params['days']),int(params['day']),'first' in params)
         elif params['action'] == 'archivePlay':
             archivePlay(params['cid'],params['pid'])
+        elif params['action'] == 'archivePlayTS':
+            if 'tolerance' in params:
+                archivePlayTS(params['channelKey'],params['catchup_start_ts'],params['catchup_end_ts'],params['tolerance'])
+            else:
+                archivePlayTS(params['channelKey'],params['catchup_start_ts'],params['catchup_end_ts'])
         else:
             menu()
     else:

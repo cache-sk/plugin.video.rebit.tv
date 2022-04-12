@@ -55,6 +55,14 @@ msgctxt "#30112"
 msgid "Koľko dní generovať"
 msgstr "Koľko dní generovať"
 
+msgctxt "#30115"
+msgid "Generovať len playlist s catchup url pre timestamp"
+msgstr "Generovať len playlist s catchup url pre timestamp"
+
+msgctxt "#30116"
+msgid "Tolerancia pre dohľadanie v sekundách"
+msgstr "Tolerancia pre dohľadanie v sekundách"
+
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
 msgstr "Playlist a epg vygenerované"
@@ -142,3 +150,7 @@ msgstr "sobota"
 msgctxt "#30626"
 msgid "nedeľa"
 msgstr "nedeľa"
+
+msgctxt "#30900"
+msgid "Program nenájdený"
+msgstr "Program nenájdený"

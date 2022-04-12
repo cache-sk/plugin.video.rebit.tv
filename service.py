@@ -78,6 +78,9 @@ class RebbitMonitor(xbmc.Monitor):
         gse = 'true' == self._addon.getSetting('genall')
         if not gse:
             return False
+            
+        gpo = 'true' == self._addon.getSetting('genplonly')
+        tolerance = self._addon.getSetting('tolerance')
 
         print('Updating rebit.tv')
 
@@ -94,11 +97,14 @@ class RebbitMonitor(xbmc.Monitor):
         _remove_oldest = 'true' == self._addon.getSetting('remove_oldest_device')
         _remove_oldest_kodi = 'true' == self._addon.getSetting('remove_oldest_kodi')
         rtv = rebittv.RebitTv(_username, _password, self._workdir, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
-        rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')),CAN_CATCHUP)
         
-        if os.path.isfile(epg_path):
-            os.unlink(epg_path)
-        os.rename(epg_workpath, epg_path)
+        if gpo:
+            rtv.generatePlaylistOnly(playlist_workpath, tolerance, CAN_CATCHUP)
+        else:
+            rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')),CAN_CATCHUP)
+            if os.path.isfile(epg_path):
+                os.unlink(epg_path)
+            os.rename(epg_workpath, epg_path)
 
         if os.path.isfile(playlist_path):
             os.unlink(playlist_path)
