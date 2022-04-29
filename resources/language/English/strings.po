@@ -63,6 +63,10 @@ msgctxt "#30116"
 msgid "Tolerancia pre dohľadanie v sekundách"
 msgstr "Tolerancia pre dohľadanie v sekundách"
 
+msgctxt "#30117"
+msgid "Nevkladať ikony programov do playlistu"
+msgstr "Nevkladať ikony programov do playlistu"
+
 msgctxt "#30201"
 msgid "Playlist a epg vygenerované"
 msgstr "Playlist a epg vygenerované"

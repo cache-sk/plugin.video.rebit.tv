@@ -15,6 +15,7 @@
         <setting label="30106" type="bool" id="restartpisc" default="false" enable="eq(-5,true)"/>
         <setting label="30115" type="bool" id="genplonly" default="false" enable="eq(-6,true)"/>
         <setting label="30116" type="number" id="tolerance" default="60" enable="eq(-1,true)"/>
+        <setting label="30117" type="bool" id="dontincludeicons" default="false" enable="eq(-8,true)"/>
         <setting type="sep"/>
         <setting label="30105" type="action" action="RunScript(special://home/addons/plugin.video.rebit.tv/pisc.py)" enable="eq(-9,true) + eq(-3,false)"/>
     </category>
