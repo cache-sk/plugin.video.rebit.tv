@@ -23,18 +23,18 @@ class RebbitMonitor(xbmc.Monitor):
     _addon = None
     _workdir = ''
     _next_update = 0
-    
+
     def _setWorkdir(self):
         if 'true' == self._addon.getSetting('gentoaddon'):
             self._workdir = xbmc.translatePath(self._addon.getAddonInfo('profile'))
         else:
             self._workdir = self._addon.getSetting('gentofolder')
-            
+
         try:
             self._workdir = self._workdir.decode("utf-8")
         except AttributeError:
             pass
-            
+
         if "" == self._workdir:
             raise rebittv.FolderNotExistException
 
@@ -42,7 +42,7 @@ class RebbitMonitor(xbmc.Monitor):
         xbmc.Monitor.__init__(self)
         self._addon = xbmcaddon.Addon()
         self._setWorkdir()
-        
+
         ts = self._addon.getSetting('genall_next_update')
         self._next_update = datetime.datetime.fromtimestamp(0) if ts == '' else datetime.datetime.fromtimestamp(float(ts))
         #cleanup
@@ -78,15 +78,16 @@ class RebbitMonitor(xbmc.Monitor):
         gse = 'true' == self._addon.getSetting('genall')
         if not gse:
             return False
-            
+
         gpo = 'true' == self._addon.getSetting('genplonly')
         tolerance = self._addon.getSetting('tolerance')
+        includeIcons = 'false' == self._addon.getSetting('dontincludeicons')
 
         print('Updating rebit.tv')
 
         if not os.path.exists(self._workdir):
             os.makedirs(self._workdir)
-        
+
         epg_workpath = os.path.join(self._workdir, get_random_string(8) + '.work.xml')
         epg_path = os.path.join(self._workdir, 'epg.xml')
         playlist_workpath = os.path.join(self._workdir, get_random_string(8) + '.work.m3u')
@@ -97,11 +98,11 @@ class RebbitMonitor(xbmc.Monitor):
         _remove_oldest = 'true' == self._addon.getSetting('remove_oldest_device')
         _remove_oldest_kodi = 'true' == self._addon.getSetting('remove_oldest_kodi')
         rtv = rebittv.RebitTv(_username, _password, self._workdir, _remove_oldest, _remove_oldest_kodi, shared.chooseDevice)
-        
+
         if gpo:
-            rtv.generatePlaylistOnly(playlist_workpath, tolerance, CAN_CATCHUP)
+            rtv.generatePlaylistOnly(playlist_workpath, tolerance, CAN_CATCHUP, includeIcons)
         else:
-            rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')),CAN_CATCHUP)
+            rtv.generate(playlist_workpath,epg_workpath,int(self._addon.getSetting('gen_days')), CAN_CATCHUP, includeIcons)
             if os.path.isfile(epg_path):
                 os.unlink(epg_path)
             os.rename(epg_workpath, epg_path)
@@ -109,9 +110,9 @@ class RebbitMonitor(xbmc.Monitor):
         if os.path.isfile(playlist_path):
             os.unlink(playlist_path)
         os.rename(playlist_workpath, playlist_path)
-        
+
         self.notify(self._addon.getLocalizedString(30201))
-        
+
         if "true" == self._addon.getSetting('restartpisc'):
             try:
                 pisc = xbmcaddon.Addon(id='pvr.iptvsimple') #existance

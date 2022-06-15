@@ -82,7 +82,7 @@ class RebitTvChannel:
         self.title = title
         self.guide = guide
         self.archive = archive
-    
+
 class RebitTvPlay:
     id = ''
     cid = ''
@@ -96,10 +96,10 @@ class RebitTvPlay:
         self.link = link
         self.protocol = protocol
         self.quality = quality
-        
+
     def __str__(self):
         return "[id=%s, cid=%s, link=%s, protocol=%s, quality=%s]" % (self.id,self.cid,self.link,self.protocol,self.quality)
-    
+
 class RebitTvProgramme:
     id = ''
     cid = ''
@@ -195,14 +195,14 @@ class RebitTv:
             raise UserNotDefinedException
 
         self._data.clear()
-        
+
         now = time.time()
 
         headers = {'Content-Type':'application/json;charset=utf-8'}
         headers.update(HEADERS)
         payload = {'password':self._password,'username':self._username}
         resp = self._session.post(API + 'auth/auth', json=payload, headers=headers)
-        
+
         if resp.status_code != 200:
             raise UserInvalidException
 
@@ -216,7 +216,7 @@ class RebitTv:
         headers.update({'Authorization':'Bearer ' + self._data.access_token})
         #need client ID, remove oldest clients until it works
         clientId = None
-        
+
         while clientId is None:
             resp = self._session.post(API + 'television/client', json=CLIENT, headers=headers)
             try:
@@ -252,14 +252,14 @@ class RebitTv:
                         oldest = oldestKodi
                 else:
                     oldest = self._choose_device(clients)
-                    
+
                 resp = self._session.delete(API + 'television/clients/'+oldest['id'], json=CLIENT, headers=headers)
                 time.sleep(1)
 
         self._data.client_id = clientId
-        
+
         self._store_session()
-        
+
     def _refresh_token(self):
         try:
             #print 'refreshing token'
@@ -270,26 +270,26 @@ class RebitTv:
             }
             headers.update(HEADERS)
             resp = self._session.post(API + 'auth/auth', headers=headers)
-            
+
             #if resp.status_code != 200:
             #    raise UserInvalidException
-            
+
             data = resp.json()['data']
             self._data.access_token = data['access_token']
             self._data.expire_in = now + int(data['expire_in'])
             self._data.refresh_token = data['refresh_token']
             self._data.user_id = data['user_id']
-            
+
             self._store_session()
         except:
             #probably 403, data not in response
             self._data.clear()
-    
+
     def _reconnect(self):
         self._data.expire_in = 0
         self._auth()
-    
-    
+
+
     def _get(self, url, params={}, dheaders={}, slow=False):
         doIt = True
         while doIt:
@@ -314,11 +314,11 @@ class RebitTv:
         headers = {'Authorization':'Bearer ' + self._data.access_token, 'x-television-client-id':self._data.client_id, 'x-child-lock-code':'0000'}
         headers.update(HEADERS)
         return headers
-    
+
     def getRequestsSession(self):
         self._auth()
         return self._session
-        
+
     def getChannels(self):
         self._auth()
         data = self._get(API + 'television/channels')
@@ -360,7 +360,7 @@ class RebitTv:
             data['protocol'] if 'protocol' in data and data['protocol'] else '',
             data['quality'] if 'quality' in data and data['quality'] else '')
         return play
-    
+
     def getChannelGuide(self, channelId, dfrom, dto):
         self._auth()
         data = self._get(API + 'television/channels/'+channelId+'/programmes', params={'filter[start][ge]':dfrom,'filter[start][le]':dto}, slow=True)
@@ -379,7 +379,7 @@ class RebitTv:
             programmes.append(programme)
         return programmes
 
-    def generate(self, playlist, guide, days=7, catchup=None):
+    def generate(self, playlist, guide, days=7, catchup=None, includeIcons=True):
         print('Generating rebit tv playlist and guide')
         dfrom = datetime.datetime.now() - datetime.timedelta(days=1)
         dto = dfrom + datetime.timedelta(days=days+1)
@@ -393,7 +393,10 @@ class RebitTv:
                 channels = self.getChannels()
                 for c in channels:
                     m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlay&cid=%s&pid={catchup-id}"' % (c.archive, c.id) if c.archive is not None and catchup is not None and catchup else ' '
-                    m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
+                    if includeIcons:
+                        m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
+                    else:
+                        m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-name="%s"%s,%s\n' % (c.id, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
                     m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
                     xml.write(u'<channel id="%s">\n' % c.id)
                     xml.write(u'<display-name>%s</display-name>\n' % html_escape(c.title))
@@ -416,13 +419,16 @@ class RebitTv:
                 m3u.write(u'#EXT-X-ENDLIST\n')
                 xml.write(u'</tv>\n')
 
-    def generatePlaylistOnly(self, playlist, tolerance='60', catchup=None):
+    def generatePlaylistOnly(self, playlist, tolerance='60', catchup=None, includeIcons=True):
         print('Generating rebit tv playlist')
         with io.open(playlist, 'w', encoding='utf8') as m3u:
             m3u.write(u'#EXTM3U\n')
             channels = self.getChannels()
             for c in channels:
                 m3uCatchup = u' catchup-days="%d" catchup-type="default" catchup-source="plugin://plugin.video.rebit.tv/?action=archivePlayTS&channelKey=%s&catchup_start_ts={utc}&catchup_end_ts={utcend}&tolerance=%s"' % (c.archive, quote_plus(enc_utf8(c.title)), tolerance) if c.archive is not None and catchup is not None and catchup else ' '
-                m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
+                if includeIcons:
+                    m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-logo="%s" tvg-name="%s"%s,%s\n' % (c.id, c.icon, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
+                else:
+                    m3u.write(u'#EXTINF:-1 tvg-id="%s" tvg-name="%s"%s,%s\n' % (c.id, c.title, m3uCatchup, html_escape(c.title,{',':'-'})))
                 m3u.write(u'plugin://plugin.video.rebit.tv/?action=play&cid=%s\n' % (c.id))
             m3u.write(u'#EXT-X-ENDLIST\n')
