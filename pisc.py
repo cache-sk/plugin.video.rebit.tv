@@ -8,6 +8,11 @@ import xbmcgui
 import xbmcaddon
 import rebittv
 
+try:
+    from xbmc import translatePath
+except ImportError:
+    from xbmcvfs import translatePath
+
 def set_pisc():
     _self = xbmcaddon.Addon(id='plugin.video.rebit.tv')
     try:
@@ -20,7 +25,7 @@ def set_pisc():
         return
         
     if 'true' == _self.getSetting('gentoaddon'):
-        _workdir = xbmc.translatePath(_self.getAddonInfo('profile'))
+        _workdir = translatePath(_self.getAddonInfo('profile'))
     else:
         _workdir = _self.getSetting('gentofolder')
     try:

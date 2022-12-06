@@ -17,6 +17,11 @@ import string
 import random
 import shared
 
+try:
+    from xbmc import translatePath
+except ImportError:
+    from xbmcvfs import translatePath
+
 CAN_CATCHUP = float(re.split("[, \-!?:]+", xbmc.getInfoLabel('System.BuildVersion'))[0]) >= 19
 
 class RebbitMonitor(xbmc.Monitor):
@@ -26,7 +31,7 @@ class RebbitMonitor(xbmc.Monitor):
 
     def _setWorkdir(self):
         if 'true' == self._addon.getSetting('gentoaddon'):
-            self._workdir = xbmc.translatePath(self._addon.getAddonInfo('profile'))
+            self._workdir = translatePath(self._addon.getAddonInfo('profile'))
         else:
             self._workdir = self._addon.getSetting('gentofolder')
 

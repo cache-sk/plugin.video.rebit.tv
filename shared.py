@@ -7,8 +7,13 @@
 import xbmc, xbmcaddon, xbmcgui
 import datetime
 
+try:
+    from xbmc import translatePath
+except ImportError:
+    from xbmcvfs import translatePath
+
 _addon = xbmcaddon.Addon()
-_profile = xbmc.translatePath( _addon.getAddonInfo('profile'))
+_profile = translatePath( _addon.getAddonInfo('profile'))
 
 def chooseDevice(devices):
     def nameDevice(device):
